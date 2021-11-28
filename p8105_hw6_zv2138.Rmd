@@ -78,3 +78,56 @@ weather_df =
   select(name, id, everything())
 ```
 
+```{r, creating bootstrap samples}
+boot_sample = function(df) {
+  sample_frac(df, replace = TRUE)
+}
+
+boot_straps = 
+  data_frame(
+    strap_number = 1:5000,
+    strap_sample = rerun(5000, boot_sample(weather_df))
+  ) 
+```
+
+```{r, creating bootstrap results}
+bootstrap_results = 
+  boot_straps %>% 
+  mutate(
+    models = map(strap_sample, ~lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::tidy)) %>% 
+  select(-strap_sample, -models) %>% 
+  unnest(results) 
+
+bootstrap_results2 = 
+  boot_straps %>% 
+  mutate(
+    models = map(strap_sample, ~lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::glance)) %>% 
+  select(-strap_sample, -models) %>% 
+  unnest(results) %>% 
+  select(strap_number, r.squared)
+
+final_bootstrap_results =
+  bootstrap_results %>% 
+    mutate(log_estimate = log(estimate)) %>% 
+    group_by(strap_number) %>% 
+    summarise(log_b0_b1 = sum(log_estimate)) 
+
+final_bootstrap_results = 
+  merge(final_bootstrap_results, bootstrap_results2, by = "strap_number")
+
+
+ci_log_b0_b1 = 
+  final_bootstrap_results %>% 
+  summarize(
+    ci_lower = quantile(log_b0_b1, 0.025), 
+    ci_upper = quantile(log_b0_b1, 0.975))
+
+ci_r2 = 
+  final_bootstrap_results %>% 
+  summarize(
+    ci_lower = quantile(r.squared, 0.025), 
+    ci_upper = quantile(r.squared, 0.975))
+```
+
