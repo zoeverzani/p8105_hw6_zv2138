@@ -1,0 +1,22 @@
+---
+title: "p8105_hw6_zv2138"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+```{r, load and clean the data}
+birthweight_df = 
+  read_csv("./data/birthweight.csv") %>% 
+  mutate(
+    babysex = factor(babysex, levels = c('1', '2'), labels = c("male", "female")),
+    malform = factor(malform, levels = c('0', '1'), labels = c("absent", "present")),
+    frace = factor(frace, levels = c("1", "2", "3", "4", "8", "9"), labels = c("White", "Black", "Asian", "Puerto Rican", "Other", "Unknown")),
+    mrace = factor(mrace, levels = c("1", "2", "3", "4", "8", "9"), labels = c("White", "Black", "Asian", "Puerto Rican", "Other", "Unknown")))
+  
+# No Missing Values 
+colSums(is.na(birthweight_df))
+```
+
