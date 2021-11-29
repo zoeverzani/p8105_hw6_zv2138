@@ -178,9 +178,9 @@ final_bootstrap_results %>%
 log_b0_b1_plot / r_squared_plot
 ```
   
-  We can see from the above plots the distribution of the R-squared Estimate and the distribution of the Estimated Log of b0*b1 follow a normal distribution. 
-The Estimated Log of b0*b1 distribution has a center around 2.01.
-The R-squared Estimate distribution has a center around 0.91.
+  We can see from the above plots the distribution of the $\hat{r}^{2}$ Estimate and the distribution of the Estimated $\log(\hat{\beta}_{0} * \hat{\beta}_{1})$ follow a normal distribution. 
+The Estimated $\log(\hat{\beta}_{0} * \hat{\beta}_{1})$ distribution has a center around 2.01.
+The $\hat{r}^{2}$ Estimate distribution has a center around 0.91.
 
 ## 95% confidence intervals 
 ```{r}
