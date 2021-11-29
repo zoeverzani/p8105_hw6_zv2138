@@ -7,9 +7,12 @@ output: github_document
 library(tidyverse)
 library(modelr)
 library(mgcv)
+library(patchwork)
+library(knitr)
 ```
 
 # Question 1
+## Load and Clean the Data 
 ```{r, load and clean the data}
 birthweight_df = 
   read_csv("./data/birthweight.csv") %>% 
@@ -23,6 +26,37 @@ birthweight_df =
 colSums(is.na(birthweight_df))
 ```
 
+## My Regression Model
+To model baby birthweight I included the following variables with explanation as to what theories/why I choose to include them in my model. 
+
+* baby's sex - on average male babyies typically are a little heavier than female babies
+* gestational age in weeks - in general higher gestational age corresponds to heavier babies 
+* mother’s weight gain during pregnancy (pounds) - it would seem logical that mothers that gain more weight have heavier babies and placentas
+* baby’s length at birth (centimeters) - it is logical to think taller babies are on average heavier 
+* baby’s head circumference at birth (centimeters) - it is logical to think bigger headed babies are on average larger babies so weigh more 
+* presence of malformations that could affect weight - clearly this variable indicates it may affect the baby's weight 
+* mother’s age at delivery (years) - research shows older mothers usually is associated with birth weight 
+
+```{r, my regression model}
+my_model = lm(bwt ~ babysex + gaweeks + wtgain + blength + bhead + malform + momage, data = birthweight_df) 
+```
+
+## Plotting My Model
+```{r}
+birthweight_df %>% 
+  modelr::add_predictions(my_model) %>% 
+  modelr::add_residuals(my_model) %>% 
+  ggplot(aes(x = pred, y = resid)) + 
+  geom_point(alpha = .3) +
+    labs(
+    x = "Predicted Value",
+    y = "Residual"
+  )
+```
+  
+  From the graph we see most residuals fall between -500 and 500. We see a few outliers present in the data with abnormally large residuals. 
+
+## Model Comparison 
 ```{r, creating my three models}
 cv_birthweight_df = 
   crossv_mc(birthweight_df, 50) 
@@ -46,6 +80,7 @@ cv_birthweight_df =
     rmse_interaction = map2_dbl(interaction_model, test, ~rmse(model = .x, data = .y)))
 ```
 
+
 ```{r, graphing my three models RMSE values}
 cv_birthweight_df %>% 
   select(starts_with("rmse")) %>% 
@@ -62,8 +97,11 @@ cv_birthweight_df %>%
     y = "RMSE"
   )
 ```
+  
+  By comparing the three models and their RMSE values we can see my model is the best fit for the birthweight data set and the main effects model provides the worst fit.
 
 # Question 2
+## Load the Data
 ```{r}
 weather_df = 
   rnoaa::meteo_pull_monitors(
@@ -78,6 +116,7 @@ weather_df =
   select(name, id, everything())
 ```
 
+## Creating Bootsrap Samples and Results
 ```{r, creating bootstrap samples}
 boot_sample = function(df) {
   sample_frac(df, replace = TRUE)
@@ -116,8 +155,35 @@ final_bootstrap_results =
 
 final_bootstrap_results = 
   merge(final_bootstrap_results, bootstrap_results2, by = "strap_number")
+```
 
+## Plotting the Estimates
+```{r}
+log_b0_b1_plot = 
+final_bootstrap_results %>% 
+  ggplot(aes(x = log_b0_b1)) + 
+  geom_density() +
+  labs(
+   x = "Estimated Log of b0*b1",
+   y = "Density")
 
+r_squared_plot =
+final_bootstrap_results %>% 
+  ggplot(aes(x = r.squared)) +
+  geom_density() +
+  labs(
+   x = "R-squared Estimate",
+   y = "Density")
+
+log_b0_b1_plot / r_squared_plot
+```
+  
+  We can see from the above plots the distribution of the R-squared Estimate and the distribution of the Estimated Log of b0*b1 follow a normal distribution. 
+The Estimated Log of b0*b1 distribution has a center around 2.01.
+The R-squared Estimate distribution has a center around 0.91.
+
+## 95% confidence intervals 
+```{r}
 ci_log_b0_b1 = 
   final_bootstrap_results %>% 
   summarize(
@@ -130,4 +196,152 @@ ci_r2 =
     ci_lower = quantile(r.squared, 0.025), 
     ci_upper = quantile(r.squared, 0.975))
 ```
+
+The 95% confidence interval for $\hat{r}^{2}$ is `r pull(ci_r2, ci_lower)` to `r pull(ci_r2, ci_upper)`
+
+The 95% confidence interval for $\log(\hat{\beta}_{0} * \hat{\beta}_{1})$ is `r pull(ci_log_b0_b1, ci_lower)` to `r pull(ci_log_b0_b1, ci_upper)`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
