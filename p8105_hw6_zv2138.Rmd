@@ -34,12 +34,14 @@ To model baby birthweight I included the following variables with explanation as
 * mother’s weight gain during pregnancy (pounds) - it would seem logical that mothers that gain more weight have heavier babies and placentas
 * baby’s length at birth (centimeters) - it is logical to think taller babies are on average heavier 
 * baby’s head circumference at birth (centimeters) - it is logical to think bigger headed babies are on average larger babies so weigh more 
-* presence of malformations that could affect weight - clearly this variable indicates it may affect the baby's weight 
 * mother’s age at delivery (years) - research shows older mothers usually is associated with birth weight 
 
 ```{r, my regression model}
-my_model = lm(bwt ~ babysex + gaweeks + wtgain + blength + bhead + malform + momage, data = birthweight_df) 
+my_model = lm(bwt ~ babysex + gaweeks + wtgain + blength + bhead + momage, data = birthweight_df) 
+
+summary(my_model)
 ```
+After running summary on my model we see all variables are significant. I will keep all variables in my model. 
 
 ## Plotting My Model
 ```{r}
@@ -49,12 +51,11 @@ birthweight_df %>%
   ggplot(aes(x = pred, y = resid)) + 
   geom_point(alpha = .3) +
     labs(
+    title = "Plot of Models Residuals against Fitted Values",
     x = "Predicted Value",
     y = "Residual"
   )
 ```
-  
-  From the graph we see most residuals fall between -500 and 500. We see a few outliers present in the data with abnormally large residuals. 
 
 ## Model Comparison 
 ```{r, creating my three models}
@@ -91,7 +92,7 @@ cv_birthweight_df %>%
     names_prefix = "rmse_") %>% 
   mutate(model = fct_inorder(model)) %>% 
   ggplot(aes(x = model, y = rmse)) +
-  geom_violin() + 
+  geom_boxplot() + 
   labs(
     x = "Model",
     y = "RMSE"
@@ -118,6 +119,8 @@ weather_df =
 
 ## Creating Bootsrap Samples and Results
 ```{r, creating bootstrap samples}
+set.seed(10)
+
 boot_sample = function(df) {
   sample_frac(df, replace = TRUE)
 }
